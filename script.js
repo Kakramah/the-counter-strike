@@ -36,27 +36,54 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dispatchEvent(new Event('scroll'));
 });
 
-// Form Submission (No alerts allowed)
-function submitPledge() {
+// Form Submission (Web3Forms API Integration)
+async function submitPledge() {
     const nameInput = document.getElementById('citizenName');
     const feedback = document.getElementById('formFeedback');
     const btn = document.querySelector('.submit-btn');
+    const name = nameInput.value.trim();
     
-    if(nameInput.value.trim() !== "") {
-        // Simulate network request
+    if(name !== "") {
         btn.innerHTML = "جاري التوثيق...";
-        btn.style.opacity = "0.7";
         btn.disabled = true;
+        btn.style.opacity = "0.7";
         
-        setTimeout(() => {
-            btn.innerHTML = "تم التوثيق";
-            btn.style.background = "var(--accent-gold)";
-            btn.style.color = "white";
+        try {
+            const response = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    access_key: '2527772c-69c7-4bd9-9319-a5b705e44bac',
+                    subject: 'الالتزام بوثيقة الوعي - الضربة المعاكسة',
+                    name: name
+                })
+            });
             
-            feedback.style.color = "var(--accent-gold)";
-            feedback.innerHTML = `شكراً لوعيك يا ${nameInput.value}. صمتك ضربة موجعة للتفاهة.`;
-            nameInput.value = "";
-            nameInput.disabled = true;
-        }, 1500);
+            if(response.ok) {
+                btn.innerHTML = "تم التوثيق";
+                btn.style.background = "var(--accent-gold)";
+                btn.style.color = "white";
+                
+                feedback.style.color = "var(--accent-gold)";
+                feedback.innerHTML = `شكراً لوعيك يا ${name}. صمتك ضربة موجعة للتفاهة.`;
+                nameInput.value = "";
+                nameInput.disabled = true;
+            } else {
+                btn.innerHTML = "فشل التوثيق";
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                feedback.style.color = "#ff4444";
+                feedback.innerHTML = "حدث خطأ أثناء التوثيق. حاول مجدداً.";
+            }
+        } catch (error) {
+            btn.innerHTML = "خطأ في الاتصال";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            feedback.style.color = "#ff4444";
+            feedback.innerHTML = "تعذر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.";
+        }
     }
 }
